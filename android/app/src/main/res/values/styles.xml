@@ -1,0 +1,9 @@
+<resources>
+  <style name="Tema" parent="android:Theme.Material.NoActionBar">
+    <item name="android:windowBackground">@color/zemin</item>
+    <item name="android:statusBarColor">#23262c</item>
+    <item name="android:navigationBarColor">#23262c</item>
+    <item name="android:colorAccent">#4f9dff</item>
+  </style>
+  <color name="zemin">#17191d</color>
+</resources>

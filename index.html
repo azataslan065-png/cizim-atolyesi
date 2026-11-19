@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>Çizim Atölyesi</title>
+<link rel="icon" href="app-icon-192.png">
+<meta name="theme-color" content="#23262c">
 <style>
 :root{--bg:#17191d;--panel:#23262c;--panel2:#2c3038;--line:#383d47;--txt:#e9eaee;--mut:#9aa1ad;--acc:#4f9dff;--accbg:#1f3552;--r:10px}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -236,6 +238,7 @@ svg{display:block}
 'use strict';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const DPR=Math.min(window.devicePixelRatio||1,2);
+const APP=window.CizimApp||null;   // Android uygulaması içindeyse köprü
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const mk=(w,h)=>{const c=document.createElement('canvas');c.width=Math.max(1,w|0);c.height=Math.max(1,h|0);return c};
 const cloneC=c=>{const n=mk(c.width,c.height);n.getContext('2d').drawImage(c,0,0);return n};
@@ -1029,14 +1032,22 @@ function resizeDialog(){
 function exportDialog(){
   commitFloating();
   let fmt='png';
+  const note=APP?'<p class="note"><b>Galeriye kaydet</b>: Resimler › Çizim Atölyesi klasörüne yazılır.</p>'
+    :'<p class="note">Telefonda resme <b>uzun bas</b> → “Resmi kaydet”.<br>Bilgisayarda <b>sağ tık</b> → “Resmi farklı kaydet”.</p>';
+  const btns=APP?[{t:'Paylaş',c:'g',fn:()=>{const o=outData(fmt);APP.paylas(o.ad,o.tip,o.b64);return false}},{t:'Galeriye kaydet',fn:()=>{const o=outData(fmt);APP.resimKaydet(o.ad,o.tip,o.b64);toast('Kaydediliyor…')}}]
+    :[{t:'Panoya kopyala',c:'g',fn:()=>{copyImage();return false}},{t:'Kapat'}];
   const b=dialog('Kaydet / Dışa aktar',`
     <div class="checks"><button class="chip on" data-f="png">PNG (saydamlık korunur)</button><button class="chip" data-f="jpeg">JPG (küçük dosya)</button></div>
-    <img id="outImg" alt="Çizimin">
-    <p class="note">Telefonda resme <b>uzun bas</b> → “Resmi kaydet”.<br>Bilgisayarda <b>sağ tık</b> → “Resmi farklı kaydet”.</p>`,
-    [{t:'Panoya kopyala',c:'g',fn:()=>{copyImage();return false}},{t:'Kapat'}]);
-  const upd=()=>{const f=flatten(fmt==='jpeg');$('#outImg').src=f.toDataURL('image/'+fmt,.92)};
+    <img id="outImg" alt="Çizimin">${note}`,btns);
+  const upd=()=>{$('#outImg').src=flatten(fmt==='jpeg').toDataURL('image/'+fmt,.92)};
   b.querySelectorAll('[data-f]').forEach(c=>c.onclick=()=>{fmt=c.dataset.f;b.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===c));upd()});
   upd();
+}
+function outData(fmt){
+  const d=new Date(),z=n=>String(n).padStart(2,'0');
+  const ad=`cizim-${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}.${fmt==='jpeg'?'jpg':'png'}`;
+  const url=flatten(fmt==='jpeg').toDataURL('image/'+fmt,.92);
+  return{ad,tip:'image/'+fmt,b64:url.slice(url.indexOf(',')+1)};
 }
 function copyImage(){
   try{flatten(false).toBlob(async bl=>{try{await navigator.clipboard.write([new ClipboardItem({'image/png':bl})]);toast('Resim panoya kopyalandı')}catch(e){toast('Bu cihazda panoya kopyalanamıyor — uzun bas / sağ tık ile kaydet')}},'image/png')}catch(e){toast('Panoya kopyalanamadı')}
@@ -1052,12 +1063,12 @@ function menuDialog(){
     ['Düzen'],['Geri al',undo,'Ctrl+Z'],['Yinele',redo,'Ctrl+Y'],['Tümünü seç',selectAll,'Ctrl+A'],['Kopyala',()=>copySel(),'Ctrl+C'],['Kes',cutSel,'Ctrl+X'],['Yapıştır',pasteClip,'Ctrl+V'],['Seçimi sil',deleteSel,'Del'],['Seçime kırp',cropToSel],['Seçimi kaldır',deselect,'Ctrl+D'],
     ['Tuval'],['Tuval boyutu…',resizeDialog],['Sağa döndür 90°',()=>rotateDoc(1)],['Sola döndür 90°',()=>rotateDoc(-1)],['Yatay çevir',()=>flipDoc(true)],['Dikey çevir',()=>flipDoc(false)],['Tuvali temizle',()=>confirmD('Tüm katmanlar temizlenecek.',()=>{commitFloating();pushD();D.layers.forEach((L,i)=>{L.ctx.clearRect(0,0,D.w,D.h);if(i===0){L.ctx.fillStyle='#fff';L.ctx.fillRect(0,0,D.w,D.h)}});afterChange()},'Temizle')],
     ['Efektler (aktif katman / seçim)'],['Gri ton',()=>applyFx('gray')],['Renkleri ters çevir',()=>applyFx('invert')],['Sepya',()=>applyFx('sepia')],['Parlaklık +',()=>applyFx('bright')],['Parlaklık −',()=>applyFx('dark')],['Kontrast +',()=>applyFx('contrast')],['Doygunluk +',()=>applyFx('sat')],['Bulanıklaştır',()=>applyFx('blur')],['Keskinleştir',()=>applyFx('sharpen')],['Kabartma',()=>applyFx('emboss')],['Kenar bul',()=>applyFx('edges')],['Posterleştir',()=>applyFx('poster')],['Pikselleştir',()=>applyFx('pixel')],['Gren / gürültü',()=>applyFx('noise')],['Katmanı yatay çevir',()=>applyFx('flipLH')],['Katmanı dikey çevir',()=>applyFx('flipLV')],
-    ['Görünüm'],['Ekrana sığdır',fit,'0'],['Gerçek boyut %100',()=>zoomTo(1),'Ctrl+1'],[S.grid?'Izgarayı gizle':'Izgarayı göster',()=>{S.grid=!S.grid;savePrefs();dirty()}],['Tam ekran',toggleFS],['Kısayollar ve yardım',helpDialog,'?']
+    ['Görünüm'],['Ekrana sığdır',fit,'0'],['Gerçek boyut %100',()=>zoomTo(1),'Ctrl+1'],[S.grid?'Izgarayı gizle':'Izgarayı göster',()=>{S.grid=!S.grid;savePrefs();dirty()}],['Tam ekran',toggleFS],['Kısayollar ve yardım',helpDialog,'?'],...(APP?[['Uygulama'],['Güncellemeleri denetle',()=>APP.guncellemeDenetle()],['Sürüm '+APP.surumAd(),()=>toast('Çizim Atölyesi '+APP.surumAd())]]:[])
   ];
   const b=dialog('Menü',`<div class="menu">${items.map((it,i)=>it.length===1?`<h4>${it[0]}</h4>`:`<button data-i="${i}">${it[0]}${it[2]?`<kbd>${it[2]}</kbd>`:''}</button>`).join('')}</div>`,null);
   b.querySelectorAll('[data-i]').forEach(x=>x.onclick=()=>{const f=items[+x.dataset.i][1];closeDialog();setTimeout(f,10)});
 }
-function toggleFS(){try{if(document.fullscreenElement)document.exitFullscreen();else{const p=document.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>toast('Tam ekran bu görünümde desteklenmiyor'))}}catch(e){toast('Tam ekran bu görünümde desteklenmiyor')}}
+function toggleFS(){if(APP){try{APP.tamEkranAyarla(!APP.tamEkranMi())}catch(e){}return}try{if(document.fullscreenElement)document.exitFullscreen();else{const p=document.documentElement.requestFullscreen();if(p&&p.catch)p.catch(()=>toast('Tam ekran bu görünümde desteklenmiyor'))}}catch(e){toast('Tam ekran bu görünümde desteklenmiyor')}}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='n'&&!e.shiftKey){e.preventDefault();newDocDialog()}});
 
 /* ================= TOP BUTTONS ================= */
@@ -1091,6 +1102,16 @@ renderRecent();syncColorUI();setTool(S.tool==='text'?'brush':S.tool);
   if(innerWidth>=1000)openSide('color');
   updOpts();updHud();
 })();
+// Android uygulaması kancaları
+window.__appKaydedildi=(ok,m)=>toast(m);
+window.__appKaydet=()=>{clearTimeout(asT);doSave()};
+window.__appGeri=()=>{
+  if($('#modal').classList.contains('show')){closeDialog();return true}
+  if(app.classList.contains('side-open')&&innerWidth<1000){toggleSide(false);return true}
+  if(floating){cancelFloating();return true}
+  if(sel){deselect();return true}
+  return false;
+};
 // expose for tests
 window.__CA={D,S,V,get sel(){return sel},get floating(){return floating},hist,undo,redo,setTool,applyFx,addLayer,selectAll,fit};
 })();

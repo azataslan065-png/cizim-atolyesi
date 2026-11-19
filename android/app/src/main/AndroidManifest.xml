@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="28"/>
+  <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:theme="@style/Tema"
+      android:hardwareAccelerated="true" android:usesCleartextTraffic="false" android:allowBackup="false" android:largeHeap="true">
+    <activity android:name=".Ana" android:exported="true" android:launchMode="singleTask" android:screenOrientation="fullSensor"
+        android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboard|keyboardHidden|navigation|uiMode|density|fontScale"
+        android:windowSoftInputMode="adjustResize">
+      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+    </activity>
+    <provider android:name=".Dosya" android:authorities="${applicationId}.dosya" android:exported="false" android:grantUriPermissions="true"/>
+  </application>
+</manifest>
