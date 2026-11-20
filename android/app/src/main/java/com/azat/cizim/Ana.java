@@ -146,13 +146,14 @@ public class Ana extends Activity {
     }
 
     @Override public void onBackPressed() {
+        if (Guncelle.acik()) { Guncelle.kapat(); return; }
         if (Cikis.acik()) { Cikis.kapat(); return; }
         if (w == null) { super.onBackPressed(); return; }
         w.evaluateJavascript("(function(){try{return !!(window.__appGeri&&window.__appGeri())}catch(e){return false}})()",
             v -> { if (!"true".equals(v)) Cikis.goster(Ana.this); });
     }
 
-    @Override protected void onResume() { super.onResume(); if (w != null) w.onResume(); }
+    @Override protected void onResume() { super.onResume(); if (w != null) w.onResume(); Guncelle.donus(this); }
     @Override protected void onPause() { if (w != null) { w.evaluateJavascript("try{window.__appKaydet&&window.__appKaydet()}catch(e){}", null); w.onPause(); } super.onPause(); }
     @Override protected void onDestroy() { if (w != null) { w.destroy(); w = null; } super.onDestroy(); }
 
@@ -185,6 +186,32 @@ public class Ana extends Activity {
                         MediaScannerConnection.scanFile(Ana.this, new String[]{ f.getAbsolutePath() }, new String[]{ tip }, null);
                     }
                     ok = true; m = "Galeriye kaydedildi: " + a;
+                } catch (Exception e) { m = "Kaydedilemedi: " + e.getMessage(); }
+                final boolean fok = ok; final String fm = m.replace("\\", "").replace("'", "’");
+                h.post(() -> { if (w != null) w.evaluateJavascript("try{window.__appKaydedildi&&window.__appKaydedildi(" + fok + ",'" + fm + "')}catch(e){}", null); });
+            }).start();
+        }
+        /* Video (zaman atlamalı / animasyon) Galeri'ye: Filmler/Çizim Atölyesi */
+        @JavascriptInterface public void videoKaydet(final String ad, final String tip, final String b64) {
+            new Thread(() -> {
+                boolean ok = false; String m;
+                try {
+                    byte[] veri = Base64.decode(b64, Base64.DEFAULT);
+                    String a = ad.replaceAll("[\\\\/:*?\"<>|]", "_");
+                    if (Build.VERSION.SDK_INT >= 29) {
+                        ContentValues cv = new ContentValues();
+                        cv.put(MediaStore.MediaColumns.DISPLAY_NAME, a);
+                        cv.put(MediaStore.MediaColumns.MIME_TYPE, tip);
+                        cv.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MOVIES + "/Çizim Atölyesi");
+                        Uri u = getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, cv);
+                        try (OutputStream o = getContentResolver().openOutputStream(u)) { o.write(veri); }
+                    } else {
+                        File dir = new File(getExternalFilesDir(Environment.DIRECTORY_MOVIES), "Çizim Atölyesi"); dir.mkdirs();
+                        File f = new File(dir, a);
+                        try (FileOutputStream o = new FileOutputStream(f)) { o.write(veri); }
+                        MediaScannerConnection.scanFile(Ana.this, new String[]{ f.getAbsolutePath() }, new String[]{ tip }, null);
+                    }
+                    ok = true; m = "Video galeriye kaydedildi: " + a;
                 } catch (Exception e) { m = "Kaydedilemedi: " + e.getMessage(); }
                 final boolean fok = ok; final String fm = m.replace("\\", "").replace("'", "’");
                 h.post(() -> { if (w != null) w.evaluateJavascript("try{window.__appKaydedildi&&window.__appKaydedildi(" + fok + ",'" + fm + "')}catch(e){}", null); });
