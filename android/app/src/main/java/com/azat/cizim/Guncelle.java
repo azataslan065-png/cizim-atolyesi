@@ -122,19 +122,15 @@ final class Guncelle {
         cubuk.setMax(1000); cubuk.setProgress(0); cubuk.setVisibility(View.GONE);
         cubuk.setProgressTintList(android.content.res.ColorStateList.valueOf(Color.parseColor("#4F9DFF")));
         kart.addView(cubuk, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(a, 10)));
-        durum = new TextView(a); durum.setText("Çizimlerin korunur; yeni sürüm eskisinin üstüne kurulur.");
+        durum = new TextView(a); durum.setText("Güncelleme Uygulama Merkezi'nden yapılır. Çizimlerin korunur.");
         durum.setTextColor(Color.parseColor("#9AA1AD")); durum.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13); durum.setGravity(Gravity.CENTER); durum.setPadding(0, dp(a, 8), 0, dp(a, 16));
         kart.addView(durum);
         LinearLayout dug = new LinearLayout(a);
         Button son = dugme(a, "Sonra", "#2C3038");
         son.setOnClickListener(v -> kapat());
-        ana = dugme(a, "İndir ve kur", "#4F9DFF");
-        final Button fana = ana;
-        ana.setOnClickListener(v -> {
-            if (bekleyen != null) { kur(a, bekleyen); return; }
-            if (indiriyor) return;
-            indir(a, kod, url); fana.setText("İndiriliyor…"); fana.setEnabled(false); son.setEnabled(false); son.setAlpha(.4f);
-        });
+        // (2026-11-21) Güncelleme yalnızca Uygulama Merkezi'nden yapılır: düğme mağazadaki sayfayı açar (bkz. Magaza).
+        ana = dugme(a, "Mağazada güncelle", "#4F9DFF");
+        ana.setOnClickListener(v -> { kapat(); Magaza.ac(a); });
         LinearLayout.LayoutParams p1 = new LinearLayout.LayoutParams(0, dp(a, 48), 1); p1.setMargins(0, 0, dp(a, 10), 0);
         dug.addView(son, p1); dug.addView(ana, new LinearLayout.LayoutParams(0, dp(a, 48), 1));
         kart.addView(dug, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
