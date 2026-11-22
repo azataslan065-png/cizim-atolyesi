@@ -45,12 +45,13 @@ final class Guncelle {
     private static Button ana;
     private static File bekleyen;
     private static boolean indiriyor;
+    private static final boolean ZORUNLU = true;   // (2026-11-22) güncelleme kartı kapatılamaz
 
     static void denetle(Activity a) { calis(a, false); }
     static void elle(Activity a) { calis(a, true); }
     static boolean acik() { return ekran != null; }
     static void kapat() {
-        if (ekran == null || indiriyor) return;
+        if (ekran == null || indiriyor || ZORUNLU) return;
         final View e = ekran; ekran = null; cubuk = null; durum = null; ana = null;
         e.animate().alpha(0f).setDuration(120).withEndAction(() -> { ViewGroup p = (ViewGroup) e.getParent(); if (p != null) p.removeView(e); }).start();
     }
@@ -126,13 +127,11 @@ final class Guncelle {
         durum.setTextColor(Color.parseColor("#9AA1AD")); durum.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13); durum.setGravity(Gravity.CENTER); durum.setPadding(0, dp(a, 8), 0, dp(a, 16));
         kart.addView(durum);
         LinearLayout dug = new LinearLayout(a);
-        Button son = dugme(a, "Sonra", "#2C3038");
-        son.setOnClickListener(v -> kapat());
         // (2026-11-21) Güncelleme yalnızca Uygulama Merkezi'nden yapılır: düğme mağazadaki sayfayı açar (bkz. Magaza).
-        ana = dugme(a, "Mağazada güncelle", "#4F9DFF");
-        ana.setOnClickListener(v -> { kapat(); Magaza.ac(a); });
-        LinearLayout.LayoutParams p1 = new LinearLayout.LayoutParams(0, dp(a, 48), 1); p1.setMargins(0, 0, dp(a, 10), 0);
-        dug.addView(son, p1); dug.addView(ana, new LinearLayout.LayoutParams(0, dp(a, 48), 1));
+        // (2026-11-22) ZORUNLU: "Sonra" yok, kart kapanmaz (geri tuşu da kapatmaz); güncellenmeden uygulama kullanılamaz.
+        ana = dugme(a, "Uygulama Merkezi'nde güncelle", "#4F9DFF");
+        ana.setOnClickListener(v -> Magaza.ac(a));
+        dug.addView(ana, new LinearLayout.LayoutParams(0, dp(a, 48), 1));
         kart.addView(dug, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         int gen = Math.min(dp(a, 380), a.getResources().getDisplayMetrics().widthPixels - dp(a, 40));
         ekran.addView(kart, new FrameLayout.LayoutParams(gen, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));

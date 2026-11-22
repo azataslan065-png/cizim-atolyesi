@@ -153,7 +153,7 @@ public class Ana extends Activity {
             v -> { if (!"true".equals(v)) Cikis.goster(Ana.this); });
     }
 
-    @Override protected void onResume() { super.onResume(); if (w != null) w.onResume(); Guncelle.donus(this); }
+    @Override protected void onResume() { super.onResume(); if (w != null) w.onResume(); Guncelle.donus(this); Guncelle.denetle(this); }
     @Override protected void onPause() { if (w != null) { w.evaluateJavascript("try{window.__appKaydet&&window.__appKaydet()}catch(e){}", null); w.onPause(); } super.onPause(); }
     @Override protected void onDestroy() { if (w != null) { w.destroy(); w = null; } super.onDestroy(); }
 
